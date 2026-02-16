@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SBM Assessment - Cuida tu Fuego</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fcfdfb; }
+        .option-card:hover { border-color: #00A54C; background-color: #f7faf5; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+        th { background-color: #f8fafc; }
+        
+        @media print {
+            @page { size: letter; margin: 0.8cm 1.2cm; }
+            .no-print { display: none !important; }
+            body { background-color: white; }
+            .pdf-page-2 { page-break-before: always; padding-top: 0.5cm; }
+            footer { font-size: 8px !important; line-height: 1.2; }
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-10">
+
+    <div class="max-w-4xl mx-auto px-4 py-6">
+        
+        <header class="text-center mb-8 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+            <img src="logo_CTF.png" alt="Logo" class="h-16 mx-auto mb-3 object-contain" onerror="this.style.display='none'">
+            <h1 class="text-2xl font-extrabold text-slate-800">Instrumento Sydney de Medición de Burnout (SBM)</h1>
+            <p class="text-[9px] text-slate-500 mt-1 uppercase leading-tight">
+                Fuente: Gordon Parker, Gabriela Tavella, Kerrie Eyers. <br>
+                Burnout: A Guide to Identifying Burnout and Pathways to Recovery. 2021
+            </p>
+            <div class="mt-4 pt-4 border-t border-slate-50 text-sm">
+                <p class="font-bold text-slate-700">Luisa Elena Sucre Fernández / Coach ejecutiva / Autora</p>
+                <a href="https://luisaelenasucre.substack.com/" target="_blank" class="text-[#00A54C] font-extrabold">luisaelenasucre.substack.com</a>
+            </div>
+        </header>
+
+        <div id="section-welcome" class="bg-white rounded-[2.5rem] shadow-xl p-10 text-center border border-slate-100">
+            <div class="max-w-md mx-auto mb-8 text-left">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Nombre completo</label>
+                <input type="text" id="user-name" placeholder="Escribe tu nombre..." class="w-full px-6 py-4 rounded-full border-2 border-slate-100 focus:border-[#00A54C] outline-none">
+            </div>
+            <button onclick="iniciarEvaluacion()" class="bg-[#00A54C] text-white px-12 py-5 rounded-full font-bold text-lg shadow-lg hover:bg-[#5CB338] transition-all">
+                Comenzar Medición
+            </button>
+        </div>
+
+        <div id="section-quiz" style="display:none" class="space-y-6">
+            <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div id="progress-bar" class="h-full bg-[#5CB338]" style="width: 0%"></div>
+            </div>
+            <div class="bg-white rounded-[2.5rem] shadow-xl p-8 md:p-12 border border-slate-100 min-h-[350px] flex flex-col justify-center">
+                <h3 id="text-q" class="text-xl md:text-2xl font-bold text-slate-800 my-8 text-center">...</h3>
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+            <div class="flex justify-between px-4">
+                <button onclick="anteriorPregunta()" class="text-slate-400 font-bold hover:text-slate-800">← Anterior</button>
+                <span id="counter" class="text-slate-400 text-sm font-bold"></span>
+            </div>
+        </div>
+
+        <div id="section-results" style="display:none" class="space-y-6">
+            <div class="bg-white rounded-[2.5rem] p-8 shadow-2xl border-t-8 border-[#FB4141]">
+                <div class="flex justify-between items-start mb-4">
+                    <div><h2 id="out-name" class="text-2xl font-bold"></h2><p id="out-date" class="text-slate-500 text-sm italic"></p></div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Puntaje Total</p>
+                        <p id="out-score" class="text-5xl font-black">0</p>
+                    </div>
+                </div>
+                <h1 id="out-status" class="text-3xl font-black mb-3 leading-tight"></h1>
+                <p id="out-desc" class="text-lg text-slate-600 mb-6"></p>
+                
+                <div class="mt-4 border-t pt-4">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">Escala de Interpretación</h4>
+                    <table>
+                        <thead><tr><th>Riesgo</th><th>Rango</th><th>Descripción</th><th>Acción Sugerida</th></tr></thead>
+                        <tbody>
+                            <tr><td class="font-bold text-green-600">Bajo</td><td>0 - 29</td><td>Saludable</td><td>Mantenimiento de hábitos.</td></tr>
+                            <tr><td class="font-bold text-orange-500">Moderado</td><td>30 - 49</td><td>Inicial</td><td>Revisión de límites y pausas.</td></tr>
+                            <tr><td class="font-bold text-red-600">Elevado</td><td>50 - 69</td><td>Alerta</td><td>Cambio de hábitos / Apoyo.</td></tr>
+                            <tr><td class="font-bold text-red-900">Crítico</td><td>70+</td><td>Severo</td><td>Intervención multidisciplinaria urgente.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="pdf-page-2 bg-white rounded-[2.5rem] p-8 shadow-lg">
+                <h3 class="font-bold mb-4 text-xl">Perfil Detallado por Dimensión</h3>
+                <div class="h-[320px] mb-6"><canvas id="mainChart"></canvas></div>
+                
+                <div class="mt-4">
+                    <table id="dim-table" class="mb-4">
+                        <thead>
+                            <tr>
+                                <th>Dimensión</th>
+                                <th>Tu Puntaje</th>
+                                <th>Promedio SBM</th>
+                                <th>Máximo Posible</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dim-table-body"></tbody>
+                    </table>
+                    
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <p class="text-[11px] text-slate-600 leading-tight">
+                            <strong>Sobre el promedio de referencia:</strong> El promedio SBM que ves en el gráfico proviene de un estudio liderado por el Dr. Gordon Parker con 622 personas que ya presentaban síntomas claros de burnout. Se incluye aquí no como una "meta", sino como una referencia para que comprendas cómo se comparan tus niveles actuales con los de un grupo diagnosticado clínicamente.
+                        </p>
+                    </div>
+                </div>
+
+                <footer class="mt-6 pt-4 text-slate-400 text-[9px] leading-relaxed italic border-t">
+                    <strong>Nota Importante:</strong> El SBM es una herramienta de autoconocimiento. Puntajes altos pueden solaparse con otras condiciones (como ansiedad o depresión). No sustituye una evaluación médica profesional.
+                </footer>
+            </div>
+
+            <div class="flex gap-4 no-print justify-center mt-4">
+                <button onclick="window.print()" class="bg-slate-900 text-white px-10 py-4 rounded-full font-bold shadow-lg hover:bg-black transition-all">Descargar Informe PDF</button>
+                <button onclick="location.reload()" class="bg-slate-100 px-10 py-4 rounded-full font-bold hover:bg-slate-200 transition-all">Nueva Medición</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { t: "1. Me siento emocionalmente agotado(a) y exhausto(a)", c: "AGOT" },
+            { t: "2. Mi atención está menos enfocada", c: "COG" },
+            { t: "3. Me despierto sintiéndome cansado(a)", c: "AGOT" },
+            { t: "4. No puedo concentrarme ni registrar en mi memoria nueva información porque siento como si algo nubla mi pensamiento", c: "COG" },
+            { t: "5. Me he alejado de familiares y amigos", c: "AISLAM" },
+            { t: "6. Me resulta difícil concentrarme en una tarea específica", c: "COG" },
+            { t: "7. Siento que me falta energía durante el día", c: "AGOT" },
+            { t: "8. Tardo más en terminar las tareas en mi trabajo", c: "COG" },
+            { t: "9. No estoy disfrutando de mi trabajo", c: "DESEMP" },
+            { t: "10. Me cuesta entender y sintonizar con los sentimientos y emociones de colegas, miembros de mi equipo o clientes", c: "EMPT" },
+            { t: "11. He perdido motivación para mis responsabilidades", c: "DESEMP" },
+            { t: "12. Siento una pérdida de energía que dificulta empezar el día", c: "AGOT" },
+            { t: "13. Me guardo las cosas para mí", c: "AISLAM" },
+            { t: "14. Me siento mentalmente lento(a) (ej. dificultad para encontrar las palabras adecuadas)", c: "COG" },
+            { t: "15. No tengo ganas de pasar tiempo con mi círculo íntimo", c: "AISLAM" },
+            { t: "16. Paso gran parte del día preocupado(a)", c: "EDOANIM" },
+            { t: "17. Me siento constantemente fatigado(a)", c: "AGOT" },
+            { t: "18. Mi capacidad de recordar cosas no es tan buena como antes", c: "COG" },
+            { t: "19. Ya no espero con ilusión las cosas que antes me daban placer", c: "AISLAM" },
+            { t: "20. Me siento autocrítico(a) y duro(a) conmigo mismo(a)", c: "EDOANIM" },
+            { t: "21. Tengo que volver a leer algo porque no logro concentrarme", c: "COG" },
+            { t: "22. Siento que me importan menos las personas con las que trabajo", c: "EMPT" },
+            { t: "23. Estoy siendo menos empático(a)", c: "EMPT" },
+            { t: "24. Siento que estoy estancado(a) y que la vida está pasándome", c: "EDOANIM" },
+            { t: "25. Me siento agotado(a)", c: "AGOT" },
+            { t: "26. Siento que estoy contribuyendo menos en mi trabajo", c: "DESEMP" },
+            { t: "27. Las pequeñas cosas y los quehaceres me resultan frustrantes.", c: "EDOANIM" },
+            { t: "28. Mi desempeño laboral ha disminuido", c: "DESEMP" },
+            { t: "29. Me siento triste, vacío(a) y sin esperanza", c: "EDOANIM" },
+            { t: "30. Siento menos ventaja y simpatía hacia la gente en general", c: "EMPT" },
+            { t: "31. Me resulta más difícil tomarme la vida tal como es, aceptar lo que no puedo cambiar", c: "EDOANIM" },
+            { t: "32. Soy menos productivo(a) en el trabajo", c: "DESEMP" },
+            { t: "33. Haber dormido no hace que amanezca fresco(a)", c: "AGOT" },
+            { t: "34. La calidad de mi trabajo ha disminuido", c: "DESEMP" }
+        ];
+
+        const catNames = { AGOT: "Agotamiento", COG: "Cognición", EMPT: "Empatía", AISLAM: "Aislamiento", DESEMP: "Desempeño", EDOANIM: "Ánimo" };
+        const avgValues = { AGOT: 15.5, COG: 15.7, EMPT: 6.5, AISLAM: 7.8, DESEMP: 12.3, EDOANIM: 16.0 };
+        const maxValues = { AGOT: 18, COG: 21, EMPT: 12, AISLAM: 12, DESEMP: 18, EDOANIM: 21 };
+
+        let idx = 0; let answers = []; let userName = "";
+
+        function iniciarEvaluacion() {
+            userName = document.getElementById('user-name').value.trim();
+            if(!userName) { alert("Por favor, ingresa tu nombre"); return; }
+            document.getElementById('section-welcome').style.display = 'none';
+            document.getElementById('section-quiz').style.display = 'block';
+            mostrarPregunta();
+        }
+
+        function mostrarPregunta() {
+            const q = questions[idx];
+            document.getElementById('text-q').innerText = q.t;
+            document.getElementById('progress-bar').style.width = `${((idx+1) / 34) * 100}%`;
+            document.getElementById('counter').innerText = `${idx + 1} / 34`;
+            const cont = document.getElementById('options-container');
+            cont.innerHTML = '';
+            ["No es cierto para mí", "Levemente cierto", "Medianamente cierto", "Muy cierto"].forEach((label, val) => {
+                const b = document.createElement('button');
+                b.className = "option-card p-4 rounded-2xl border-2 border-slate-100 text-left font-bold text-slate-600 transition-all text-sm";
+                b.innerText = label;
+                b.onclick = function() { answers[idx] = val; idx < 33 ? (idx++, mostrarPregunta()) : mostrarResultados(); };
+                cont.appendChild(b);
+            });
+            window.scrollTo(0,0);
+        }
+
+        function anteriorPregunta() { if(idx > 0) { idx--; mostrarPregunta(); } }
+
+        function mostrarResultados() {
+            document.getElementById('section-quiz').style.display = 'none';
+            document.getElementById('section-results').style.display = 'block';
+            let totals = { AGOT:0, COG:0, EMPT:0, AISLAM:0, DESEMP:0, EDOANIM:0 };
+            questions.forEach((q, i) => totals[q.c] += answers[i]);
+            let totalScore = Object.values(totals).reduce((a, b) => a + b, 0);
+
+            document.getElementById('out-name').innerText = userName;
+            document.getElementById('out-date').innerText = new Date().toLocaleDateString();
+            document.getElementById('out-score').innerText = totalScore;
+
+            const st = document.getElementById('out-status');
+            const ds = document.getElementById('out-desc');
+
+            if(totalScore >= 70) { st.innerText = "Burnout Severo"; st.style.color = "#7F1D1D"; ds.innerText = "Tu Fuego te ha consumido, tu salud y tu vida están comprometidas."; }
+            else if(totalScore >= 50) { st.innerText = "¡Nivel de Alerta!"; st.style.color = "#FB4141"; ds.innerText = "Tus resultados muestran una carga de síntomas muy alta. Es el momento de detenerse, reflexionar y actuar."; }
+            else if(totalScore >= 30) { st.innerText = "Riesgo Moderado"; st.style.color = "#F28F38"; ds.innerText = "Hay señales claras de cansancio. Escuchar a tu cuerpo evitará aumentar el riesgo."; }
+            else { st.innerText = "Nivel Saludable"; st.style.color = "#00A54C"; ds.innerText = "Estás Cuidando tu Fuego. Sigue así."; }
+
+            const tableBody = document.getElementById('dim-table-body');
+            tableBody.innerHTML = '';
+            Object.keys(catNames).forEach(key => {
+                tableBody.innerHTML += `<tr><td class="font-bold">${catNames[key]}</td><td>${totals[key]}</td><td>${avgValues[key]}</td><td>${maxValues[key]}</td></tr>`;
+            });
+
+            new Chart(document.getElementById('mainChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.values(catNames),
+                    datasets: [
+                        { label: 'Tu Puntaje', data: Object.keys(catNames).map(k => totals[k]), backgroundColor: '#00A54C' },
+                        { label: 'Promedio SBM', data: Object.keys(catNames).map(k => avgValues[k]), backgroundColor: '#F28F38' }
+                    ]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { y: { beginAtZero: true, max: 21 } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
